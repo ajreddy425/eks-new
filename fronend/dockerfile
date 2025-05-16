@@ -1,0 +1,38 @@
+# First stage: Build React app
+FROM node:18 AS build
+WORKDIR /app
+
+# Install dependencies efficiently
+COPY package.json package-lock.json ./
+RUN npm ci
+
+# Copy source files and build
+COPY . .
+RUN npm run build
+
+# Second stage: Serve with Nginx
+FROM nginx:stable-alpine
+WORKDIR /usr/share/nginx/html
+
+# Install Bash in Alpine-based Nginx container
+RUN apk add --no-cache bash
+
+# Create a non-root user for security
+RUN addgroup -g 1001 -S appgroup && \
+    adduser -S appuser -u 1001 -G appgroup
+
+# Fix permission issues for Nginx cache directories
+RUN mkdir -p /var/cache/nginx/client_temp /var/cache/nginx/proxy_temp /var/run/nginx && \
+    chown -R appuser:appgroup /var/cache/nginx /var/run/nginx /usr/share/nginx/html
+
+# Copy built React files from build stage to Nginx serving directory
+COPY --from=build /app/build /usr/share/nginx/html
+
+# Switch to non-root user for better security
+# USER appuser
+
+LABEL maintainer="Your Name <your-email@example.com>"
+
+EXPOSE 80
+
+CMD ["nginx", "-g", "daemon off;"]

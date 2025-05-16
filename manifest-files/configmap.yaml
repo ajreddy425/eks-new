@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: backend-config
+data:
+  DB_HOST: "database-1.ci3ossuqqd7m.us-east-1.rds.amazonaws.com"
+  DB_PORT: "5432"
+
+
+
+# postgres
+# nK8roZgMJzoGNLoYDz9Z

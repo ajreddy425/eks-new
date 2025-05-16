@@ -1,0 +1,23 @@
+# First stage: Build Node.js app
+FROM node:18 AS build
+WORKDIR /app
+
+COPY package.json package-lock.json ./
+RUN npm ci --production
+
+COPY . .
+RUN npm run build
+
+# Second stage: Run app with a lightweight base image
+FROM node:18-alpine
+WORKDIR /app
+
+COPY --from=build /app .
+
+RUN addgroup -g 1001 -S appgroup && adduser -S appuser -u 1001 -G appgroup
+RUN chown -R appuser:appgroup /app
+USER appuser
+
+LABEL maintainer="Your Name <your-email@example.com>"
+EXPOSE 3000
+CMD ["node", "server.js"]
